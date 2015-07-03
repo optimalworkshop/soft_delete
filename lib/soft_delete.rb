@@ -73,7 +73,7 @@ module SoftDelete
       run_callbacks(:restore) do
         # Fixes a bug where the build would error because attributes were frozen.
         # This only happened on Rails versions earlier than 4.1.
-        noop_if_frozen = ActiveRecord.version < Gem::Version.new("4.1")
+        noop_if_frozen = ActiveRecord::VERSION::STRING < "4.1"
         if (noop_if_frozen && !@attributes.frozen?) || !noop_if_frozen
           write_attribute paranoia_column, paranoia_sentinel_value
           update_column paranoia_column, paranoia_sentinel_value
@@ -115,6 +115,7 @@ class ActiveRecord::Base
     end
     default_scope { soft_delete_scope }
 
+    #TODO: RGJB: Should this be set for models that aren't SoftDelete models?
     before_restore {
       self.class.notify_observers(:before_restore, self) if self.class.respond_to?(:notify_observers)
     }
@@ -141,7 +142,11 @@ module ActiveRecord
       def build_relation_with_soft_delete(klass, table, attribute, value)
         relation = build_relation_without_soft_delete(klass, table, attribute, value)
         if klass.soft_delete?
-          relation.merge(klass.soft_delete_scope)
+          if ActiveRecord::VERSION::STRING >= "4.1"
+            relation.and(klass.arel_table[:deleted_at].eq(nil))
+          else
+            relation.merge(klass.soft_delete_scope)
+          end
         else
           relation
         end

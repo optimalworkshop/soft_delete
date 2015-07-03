@@ -1,15 +1,15 @@
 require 'rspec/expectations'
 
-# Validate the subject's class did call "acts_as_paranoid"
-RSpec::Matchers.define :act_as_paranoid do
-  match { |subject| subject.class.ancestors.include?(Paranoia) }
+# Validate the subject's class did call "acts_as_soft_deletable"
+RSpec::Matchers.define :acts_as_soft_deletable do
+  match { |subject| subject.class.ancestors.include?(SoftDelete) }
 
   failure_message_proc = lambda do
-    "expected #{subject.class} to use `acts_as_paranoid`"
+    "expected #{subject.class} to use `acts_as_soft_deletable`"
   end
 
   failure_message_when_negated_proc = lambda do
-    "expected #{subject.class} not to use `acts_as_paranoid`"
+    "expected #{subject.class} not to use `acts_as_soft_deletable`"
   end
 
   if respond_to?(:failure_message_when_negated)
