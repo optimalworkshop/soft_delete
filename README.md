@@ -11,7 +11,7 @@ SoftDelete does not cascade through dependent associations.
 ## Installation & Usage
 
 ``` ruby
-gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails4"
+gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "master"
 ```
 
 Then run:
