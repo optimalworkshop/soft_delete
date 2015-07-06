@@ -128,24 +128,3 @@ class ActiveRecord::Base
   def soft_deletable? ; self.class.soft_deletable? ; end
 
 end
-
-module ActiveRecord
-  module Validations
-    class UniquenessValidator < ActiveModel::EachValidator
-      protected
-      def build_relation_with_soft_delete(klass, table, attribute, value)
-        relation = build_relation_without_soft_delete(klass, table, attribute, value)
-        if klass.soft_deletable?
-          if ActiveRecord::VERSION::STRING >= "4.1"
-            relation.and(klass.arel_table[:deleted_at].eq(nil))
-          else
-            relation.merge(klass.soft_delete_scope)
-          end
-        else
-          relation
-        end
-      end
-      alias_method_chain :build_relation, :soft_delete
-    end
-  end
-end
