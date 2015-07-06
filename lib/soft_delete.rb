@@ -8,7 +8,7 @@ module SoftDelete
   end
 
   module Query
-    def soft_delete? ; true ; end
+    def soft_deletable? ; true ; end
 
     def with_deleted
       if ActiveRecord::VERSION::STRING >= "4.1"
@@ -22,7 +22,7 @@ module SoftDelete
       if ActiveRecord::VERSION::STRING >= "4.1"
         with_deleted.where.not(deleted_at: nil)
       else
-        with_deleted.where("#{self.table_name}.deleted_at IS NOT NULL") # TODO: RGJB: Escaped table name? Also, put back in Rails 4.1 version.
+        with_deleted.where("#{self.quoted_table_name}.deleted_at IS NOT NULL")
       end
     end
     alias :deleted :only_deleted
@@ -42,29 +42,25 @@ module SoftDelete
   module Callbacks
     def self.extended(klazz)
       [:restore, :soft_delete].each do |callback_name|
-        klazz.define_callbacks callback_name
-
-        klazz.define_singleton_method("before_#{callback_name}") do |*args, &block|
-          set_callback(callback_name, :before, *args, &block)
-        end
-
-        klazz.define_singleton_method("around_#{callback_name}") do |*args, &block|
-          set_callback(callback_name, :around, *args, &block)
-        end
-
-        klazz.define_singleton_method("after_#{callback_name}") do |*args, &block|
-          set_callback(callback_name, :after, *args, &block)
-        end
+        klazz.define_model_callbacks :"#{callback_name}"
       end
     end
   end
 
   def soft_delete!
-    run_callbacks(:soft_delete) do
-      touch_deleted_at
+    transaction do
+      run_callbacks(:soft_delete) do
+        result = touch_deleted_at
+        if result && ActiveRecord::VERSION::STRING >= '4.2'
+          each_counter_cached_associations do |association|
+            if send(association.reflection.name)
+              association.decrement_counters
+            end
+          end
+        end
+        result
+      end
     end
-
-    self
   end
   alias :soft_delete :soft_delete!
 
@@ -75,10 +71,9 @@ module SoftDelete
         # This only happened on Rails versions earlier than 4.1.
         noop_if_frozen = ActiveRecord::VERSION::STRING < "4.1"
         if (noop_if_frozen && !@attributes.frozen?) || !noop_if_frozen
-          write_attribute paranoia_column, paranoia_sentinel_value
-          update_column paranoia_column, paranoia_sentinel_value
+          write_attribute :deleted_at, nil
+          update_column :deleted_at, nil
         end
-        restore_associated_records if opts[:recursive]
       end
     end
 
@@ -98,7 +93,7 @@ module SoftDelete
       if persisted?
         touch(:deleted_at)
       elsif !frozen?
-        write_attribute(:deleted_at, Time.zone.now)
+        write_attribute(:deleted_at, current_time_from_proper_timezone)
       end
 
       self
@@ -115,7 +110,6 @@ class ActiveRecord::Base
     end
     default_scope { soft_delete_scope }
 
-    #TODO: RGJB: Should this be set for models that aren't SoftDelete models?
     before_restore {
       self.class.notify_observers(:before_restore, self) if self.class.respond_to?(:notify_observers)
     }
@@ -130,8 +124,8 @@ class ActiveRecord::Base
     }
   end
 
-  def self.soft_delete? ; false ; end
-  def soft_delete? ; self.class.soft_delete? ; end
+  def self.soft_deletable? ; false ; end
+  def soft_deletable? ; self.class.soft_deletable? ; end
 
 end
 
@@ -141,7 +135,7 @@ module ActiveRecord
       protected
       def build_relation_with_soft_delete(klass, table, attribute, value)
         relation = build_relation_without_soft_delete(klass, table, attribute, value)
-        if klass.soft_delete?
+        if klass.soft_deletable?
           if ActiveRecord::VERSION::STRING >= "4.1"
             relation.and(klass.arel_table[:deleted_at].eq(nil))
           else
