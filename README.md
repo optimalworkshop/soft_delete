@@ -1,12 +1,7 @@
-# Soft Delete 
-
-`rails4` [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475779/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete) 
-
-`rails3` [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475785/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete)      
+# Soft Delete [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475779/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete)
 
 
 Soft Delete is a stripped down version of [Paranoia](https://github.com/radar/paranoia).
-
 
 SoftDelete is a stripped down version of Paranoia which doesn't override destroy on any Active Record objects. You would use this plugin / gem if you wish to *hide* records by called `soft_delete` on them without needing to highjack the `destroy` method and without playing with `dependent: :destroy`. SoftDelete does this by setting the `deleted_at` field to the current time when you soft delete a record, and hides it by scoping all queries on your model to only include records which do not have `deleted_at` set. If you would like to be able to call `destroy` and have the soft deletion cascaded through dependents then please use [Paranoia](https://github.com/radar/paranoia).
 
