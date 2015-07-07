@@ -7,7 +7,7 @@ SoftDelete is a stripped down version of Paranoia which doesn't override destroy
 
 SoftDelete does not cascade through dependent associations.
 
-**Warning**: The `rails3` branch does not include a patch for `validates_uniqueness_of` to ensure that uniqueness validation is performed only against non-soft-deleted records.
+**Warning**: The `rails41` branch has a known compatibility issue with counter cache column updates after `soft_delete` in a child association.
 
 ## Installation & Usage
 
