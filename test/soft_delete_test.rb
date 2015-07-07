@@ -367,26 +367,6 @@ class SoftDeleteTest < test_framework
     setup!
   end
 
-  def test_counter_cache_column_update_on_destroy
-    parent_model_with_counter_cache_column = ParentModelWithCounterCacheColumn.create
-    related_model = parent_model_with_counter_cache_column.related_models.create
-
-    assert_equal 1, parent_model_with_counter_cache_column.reload.related_models_count
-    related_model.soft_delete
-    assert_equal 0, parent_model_with_counter_cache_column.reload.related_models_count
-  end
-
-  def test_callbacks_for_counter_cache_column_update_on_destroy
-    parent_model_with_counter_cache_column = ParentModelWithCounterCacheColumn.create
-    related_model = parent_model_with_counter_cache_column.related_models.create
-
-    assert_equal nil, related_model.instance_variable_get(:@after_soft_delete_callback_called)
-
-    related_model.soft_delete
-
-    assert related_model.instance_variable_get(:@after_soft_delete_callback_called)
-  end
-
   def test_uniqueness_for_non_soft_delete_associated
     parent_model = SoftDeletableWithNonSoftDeletables.create
     related = parent_model.non_soft_deletable_unique_models.create
