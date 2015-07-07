@@ -1,4 +1,4 @@
-# Soft Delete [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475779/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete)
+# Soft Delete [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475805/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete)
 
 
 Soft Delete is a stripped down version of [Paranoia](https://github.com/radar/paranoia).
