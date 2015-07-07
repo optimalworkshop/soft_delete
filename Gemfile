@@ -9,11 +9,7 @@ platforms :rbx do
   gem 'rubinius-developer_tools'
 end
 
-<<<<<<< Updated upstream
-rails = ENV['RAILS'] || '~> 3.2'
-=======
 rails = ENV['RAILS'] || '~> 3.2.0'
->>>>>>> Stashed changes
 
 gem 'rails', rails
 
