@@ -1,17 +1,27 @@
-# Soft Delete
+# Soft Delete 
+
+`rails4` [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475779/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete) 
+
+`rails3` [![Build Status](https://semaphoreci.com/api/v1/projects/9e05f647-837d-45c2-ac6c-c3c4d83bbdea/475785/badge.svg)](https://semaphoreci.com/optimalworkshop/soft_delete)      
+
 
 Soft Delete is a stripped down version of [Paranoia](https://github.com/radar/paranoia).
 
-You would use either plugin / gem if you wished that when you called `destroy` on an Active Record object that it didn't actually destroy it, but just *hide* the record. Paranoia does this by setting a `deleted_at` field to the current time when you `destroy` a record, and hides it by scoping all queries on your model to only include records which do not have a `deleted_at` field.
 
 SoftDelete is a stripped down version of Paranoia which doesn't override destroy on any Active Record objects. You would use this plugin / gem if you wish to *hide* records by called `soft_delete` on them without needing to highjack the `destroy` method and without playing with `dependent: :destroy`. SoftDelete does this by setting the `deleted_at` field to the current time when you soft delete a record, and hides it by scoping all queries on your model to only include records which do not have `deleted_at` set. If you would like to be able to call `destroy` and have the soft deletion cascaded through dependents then please use [Paranoia](https://github.com/radar/paranoia).
 
 SoftDelete does not cascade through dependent associations.
 
+**Warning**: The `rails3` branch does not include a patch for `validates_uniqueness_of` to ensure that uniqueness validation is performed only against non-soft-deleted records.
+
 ## Installation & Usage
 
 ``` ruby
-gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "master"
+gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails3"
+```
+or
+``` ruby
+gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails4"
 ```
 
 Then run:
