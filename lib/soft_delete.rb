@@ -11,19 +11,11 @@ module SoftDelete
     def soft_deletable? ; true ; end
 
     def with_deleted
-      if ActiveRecord::VERSION::STRING >= "4.1"
-        unscope where: :deleted_at
-      else
-        scoped.tap { |x| x.default_scoped = false }
-      end
+      unscope where: :deleted_at
     end
 
     def only_deleted
-      if ActiveRecord::VERSION::STRING >= "4.1"
-        with_deleted.where.not(deleted_at: nil)
-      else
-        with_deleted.where("#{self.quoted_table_name}.deleted_at IS NOT NULL")
-      end
+      with_deleted.where.not(deleted_at: nil)
     end
     alias :deleted :only_deleted
 
@@ -51,11 +43,9 @@ module SoftDelete
     transaction do
       run_callbacks(:soft_delete) do
         result = touch_deleted_at
-        if result && ActiveRecord::VERSION::STRING >= '4.2'
-          each_counter_cached_associations do |association|
-            if send(association.reflection.name)
-              association.decrement_counters
-            end
+        each_counter_cached_associations do |association|
+          if send(association.reflection.name)
+            association.decrement_counters
           end
         end
         result
@@ -67,13 +57,8 @@ module SoftDelete
   def restore!(opts = {})
     self.class.transaction do
       run_callbacks(:restore) do
-        # Fixes a bug where the build would error because attributes were frozen.
-        # This only happened on Rails versions earlier than 4.1.
-        noop_if_frozen = ActiveRecord::VERSION::STRING < "4.1"
-        if (noop_if_frozen && !@attributes.frozen?) || !noop_if_frozen
-          write_attribute :deleted_at, nil
-          update_column :deleted_at, nil
-        end
+        write_attribute :deleted_at, nil
+        update_column :deleted_at, nil
       end
     end
 
@@ -136,11 +121,7 @@ module ActiveRecord
       def build_relation_with_soft_delete(klass, table, attribute, value)
         relation = build_relation_without_soft_delete(klass, table, attribute, value)
         if klass.soft_deletable?
-          if ActiveRecord::VERSION::STRING >= "4.1"
-            relation.and(klass.arel_table[:deleted_at].eq(nil))
-          else
-            relation.merge(klass.soft_delete_scope)
-          end
+          relation.and(klass.arel_table[:deleted_at].eq(nil))
         else
           relation
         end
