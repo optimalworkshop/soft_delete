@@ -41,7 +41,7 @@ setup!
 
 class SoftDeleteTest < test_framework
   def setup
-    ActiveRecord::Base.connection.tables.each do |table|
+    ActiveRecord::Base.connection.data_sources.each do |table|
       ActiveRecord::Base.connection.execute "DELETE FROM #{table}"
     end
   end
@@ -80,11 +80,11 @@ class SoftDeleteTest < test_framework
     model.remove_called_variables     # clear called callback flags
     model.soft_delete
 
-    assert_equal nil, model.instance_variable_get(:@update_callback_called)
-    assert_equal nil, model.instance_variable_get(:@save_callback_called)
-    assert_equal nil, model.instance_variable_get(:@validate_called)
-    assert_equal nil, model.instance_variable_get(:@destroy_callback_called)
-    assert_equal nil, model.instance_variable_get(:@after_destroy_callback_called)
+    assert_nil model.instance_variable_get(:@update_callback_called)
+    assert_nil model.instance_variable_get(:@save_callback_called)
+    assert_nil model.instance_variable_get(:@validate_called)
+    assert_nil model.instance_variable_get(:@destroy_callback_called)
+    assert_nil model.instance_variable_get(:@after_destroy_callback_called)
 
     assert model.instance_variable_get(:@after_commit_callback_called)
     assert model.instance_variable_get(:@after_soft_delete_callback_called)
@@ -138,11 +138,9 @@ class SoftDeleteTest < test_framework
     assert_equal 1, model.class.unscoped.count
   end
 
-  # Regression test for #24
   def test_chaining_for_soft_deletable_models
     scope = FeaturefulModel.where(:name => "foo").only_deleted
-    assert_equal "foo", scope.where_values_hash['name']
-    assert_equal 2, scope.where_values.count
+    assert_equal({'name' => "foo"}, scope.where_values_hash)
   end
 
   def test_only_destroyed_scope_for_soft_deletable_models
@@ -387,7 +385,7 @@ class SoftDeleteTest < test_framework
     parent_model_with_counter_cache_column = ParentModelWithCounterCacheColumn.create
     related_model = parent_model_with_counter_cache_column.related_models.create
 
-    assert_equal nil, related_model.instance_variable_get(:@after_soft_delete_callback_called)
+    assert_nil related_model.instance_variable_get(:@after_soft_delete_callback_called)
 
     related_model.soft_delete
 

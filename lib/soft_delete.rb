@@ -121,7 +121,7 @@ module ActiveRecord
       def build_relation_with_soft_delete(klass, table, attribute, value)
         relation = build_relation_without_soft_delete(klass, table, attribute, value)
         if klass.soft_deletable?
-          relation.and(klass.arel_table[:deleted_at].eq(nil))
+          relation.where(klass.arel_table[:deleted_at].eq(nil))
         else
           relation
         end

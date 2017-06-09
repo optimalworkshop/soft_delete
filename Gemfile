@@ -1,7 +1,6 @@
 source 'https://rubygems.org'
 
 gem 'sqlite3', :platforms => [:ruby]
-gem 'activerecord-jdbcsqlite3-adapter', :platforms => [:jruby]
 
 platforms :rbx do
   gem 'rubysl', '~> 2.0'
@@ -9,9 +8,9 @@ platforms :rbx do
   gem 'rubinius-developer_tools'
 end
 
-rails = ENV['RAILS'] || '~> 4.2.0'
+rails = ENV['RAILS'] || '~> 5.0.0'
 
 gem 'rails', rails
 
-# Specify your gem's dependencies in paranoia.gemspec
+# Specify your gem's dependencies in soft_delete.gemspec
 gemspec
