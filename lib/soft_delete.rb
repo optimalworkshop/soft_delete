@@ -116,7 +116,7 @@ end
 
 module ActiveRecord
   module Validations
-    class UniquenessValidator < ActiveModel::EachValidator
+    module UniquenessSoftDeleteValidator
       protected
       def build_relation_with_soft_delete(klass, table, attribute, value)
         relation = build_relation_without_soft_delete(klass, table, attribute, value)
@@ -126,7 +126,10 @@ module ActiveRecord
           relation
         end
       end
-      alias_method_chain :build_relation, :soft_delete
+    end
+
+    class UniquenessValidator < ActiveModel::EachValidator
+      prepend UniquenessSoftDeleteValidator
     end
   end
 end
