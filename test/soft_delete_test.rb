@@ -1,6 +1,4 @@
 require 'active_record'
-ActiveRecord::Base.raise_in_transactional_callbacks = true if ActiveRecord::VERSION::STRING >= '4.2'
-
 require 'minitest/autorun'
 test_framework = defined?(MiniTest::Test) ? MiniTest::Test : MiniTest::Unit::TestCase
 
@@ -422,7 +420,7 @@ class FailCallbackModel < ActiveRecord::Base
   belongs_to :parent_model
   acts_as_soft_deletable
 
-  before_soft_delete { |_| false }
+  before_soft_delete { |_| throw :abort }
 end
 
 class FeaturefulModel < ActiveRecord::Base
