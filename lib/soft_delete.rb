@@ -118,8 +118,8 @@ module ActiveRecord
   module Validations
     module UniquenessSoftDeleteValidator
       protected
-      def build_relation(klass, table, attribute, value)
-        relation = super(klass, table, attribute, value)
+      def build_relation(klass, attribute, value)
+        relation = super(klass, attribute, value)
 
         if klass.soft_deletable?
           relation.where(klass.arel_table[:deleted_at].eq(nil))
