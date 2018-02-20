@@ -31,6 +31,7 @@ def setup!
     'jobs' => 'employer_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, deleted_at DATETIME',
     'custom_column_models' => 'destroyed_at DATETIME',
     'custom_sentinel_models' => 'deleted_at DATETIME NOT NULL',
+    'non_soft_deletable_models' => 'parent_model_id INTEGER',
     'polymorphic_models' => 'parent_id INTEGER, parent_type STRING, deleted_at DATETIME',
     'non_soft_deletable_unique_models' => 'name VARCHAR(32), soft_deletable_with_non_soft_deletables_id INTEGER',
     'active_column_models' => 'deleted_at DATETIME, active BOOLEAN',
@@ -103,7 +104,9 @@ class SoftDeleteTest < test_framework
     assert_nil model.instance_variable_get(:@validate_called)
     assert_nil model.instance_variable_get(:@destroy_callback_called)
     assert_nil model.instance_variable_get(:@after_destroy_callback_called)
+
     assert model.instance_variable_get(:@after_commit_callback_called)
+    assert model.instance_variable_get(:@soft_delete_callback_called)
     assert model.instance_variable_get(:@after_soft_delete_callback_called)
   end
 
@@ -120,7 +123,9 @@ class SoftDeleteTest < test_framework
     assert_nil model.instance_variable_get(:@validate_called)
     assert_nil model.instance_variable_get(:@destroy_callback_called)
     assert_nil model.instance_variable_get(:@after_destroy_callback_called)
+
     assert model.instance_variable_get(:@after_commit_callback_called)
+    assert model.instance_variable_get(:@soft_delete_callback_called)
     assert model.instance_variable_get(:@after_soft_delete_callback_called)
   end
 
@@ -684,8 +689,9 @@ class CallbackModel < ActiveRecord::Base
   before_restore      { |model| model.instance_variable_set :@restore_callback_called, true }
   before_update       { |model| model.instance_variable_set :@update_callback_called, true }
   before_save         { |model| model.instance_variable_set :@save_callback_called, true}
-  before_soft_delete  { |model| model.instance_variable_set :@after_soft_delete_callback_called, true }
+  before_soft_delete  { |model| model.instance_variable_set :@soft_delete_callback_called, true }
 
+  after_soft_delete   { |model| model.instance_variable_set :@after_soft_delete_callback_called, true }
   after_destroy       { |model| model.instance_variable_set :@after_destroy_callback_called, true }
   after_commit        { |model| model.instance_variable_set :@after_commit_callback_called, true }
 
