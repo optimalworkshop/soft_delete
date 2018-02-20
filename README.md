@@ -9,6 +9,8 @@ SoftDelete does not cascade through dependent associations.
 
 ## Installation & Usage
 
+For Rails versions older than 4.2, please use version 1 of Soft Delete:
+
 ``` ruby
 gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails3"
 ```
@@ -16,6 +18,14 @@ or
 ``` ruby
 gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails4"
 ```
+
+
+For Rails 4.2 and 5, please use version 4 of Soft Delete:
+
+``` ruby
+gem "soft_delete", "~> 4.0"  :github => "optimalworkshop/soft_delete"
+```
+
 
 Then run:
 
@@ -68,7 +78,28 @@ Hey presto, it's there! Calling `soft_delete` will now set the `deleted_at` colu
 # => [current timestamp]
 ```
 
-If you want to access soft-deleted associations in Rails 4+, override the getter method:
+If you want to use a column other than `deleted_at`, you can pass it as an option:
+
+``` ruby
+class Client < ActiveRecord::Base
+  acts_as_soft_deletable column: :destroyed_at
+
+  ...
+end
+```
+
+If you want to skip adding the default scope:
+
+``` ruby
+class Client < ActiveRecord::Base
+  acts_as_paranoid without_default_scope: true
+
+  ...
+end
+```
+
+
+If you want to access soft-deleted associations, override the getter method:
 
 ``` ruby
 def product
@@ -76,7 +107,19 @@ def product
 end
 ```
 
+
+
 If you want to include associated soft-deleted objects in Rails 4+, you can (un)scope the association:
+
+``` ruby
+class Person < ActiveRecord::Base
+  belongs_to :group, -> { with_deleted }
+end
+
+Person.includes(:group).all
+```
+
+If you want to include associated soft-deleted objects, you can (un)scope the association:
 
 ``` ruby
 class Person < ActiveRecord::Base
@@ -92,6 +135,12 @@ If you want to find all records, even those which are deleted:
 Client.with_deleted
 ```
 
+If you want to exclude deleted records, when not able to use the default_scope (e.g. when using without_default_scope):
+
+``` ruby
+Client.without_deleted
+```
+
 If you want to find only the deleted records:
 
 ``` ruby
@@ -101,6 +150,8 @@ Client.only_deleted
 If you want to check if a record is soft-deleted:
 
 ``` ruby
+client.soft_deleted?
+# or
 client.deleted?
 ```
 
@@ -117,6 +168,13 @@ If you want to restore a whole bunch of records:
 ``` ruby
 Client.restore([id1, id2, ..., idN])
 ```
+
+Note that by default soft_delete will not prevent that a soft deleted object can't be associated with another object of a different model.
+A Rails validator is provided should you require this functionality:
+  ``` ruby
+validates :some_assocation, association_not_soft_deleted: true
+```
+This validator makes sure that `some_assocation` is not soft deleted. If the object is soft deleted the main object is rendered invalid and an validation error is added.
 
 For more information, please look at the tests.
 
@@ -138,6 +196,49 @@ add_index :clients, [:group_id, :other_id], where: "deleted_at IS NULL"
 ```
 
 Of course, this is not necessary for the indexes you always use in association with `with_deleted` or `only_deleted`.
+
+##### Unique Indexes
+
+Because NULL != NULL in standard SQL, we can not simply create a unique index
+on the deleted_at column and expect it to enforce that there only be one record
+with a certain combination of values.
+
+If your database supports them, good alternatives include partial indexes
+(above) and indexes on computed columns. E.g.
+
+``` ruby
+add_index :clients, [:group_id, 'COALESCE(deleted_at, false)'], unique: true
+```
+
+If not, an alternative is to create a separate column which is maintained
+alongside deleted_at for the sake of enforcing uniqueness. To that end,
+soft_delete makes use of two method to make its delete and restore actions:
+soft_delete_restore_attributes and soft_delete_attributes.
+
+``` ruby
+add_column :clients, :active, :boolean
+add_index :clients, [:group_id, :active], unique: true
+
+class Client < ActiveRecord::Base
+  # optionally have soft_delete make use of your unique column, so that
+  # your lookups will benefit from the unique index
+  acts_as_paranoid column: :active, sentinel_value: true
+
+  def soft_delete_restore_attributes
+    {
+      deleted_at: nil,
+      active: true
+    }
+  end
+
+  def soft_delete_attributes
+    {
+      deleted_at: current_time_from_proper_timezone,
+      active: nil
+    }
+  end
+end
+```
 
 ## Callbacks
 
