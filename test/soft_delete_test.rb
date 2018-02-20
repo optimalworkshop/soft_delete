@@ -18,14 +18,8 @@ def setup!
     'parent_model_with_counter_cache_columns' => 'related_models_count INTEGER DEFAULT 0',
     'parent_models' => 'deleted_at DATETIME',
     'soft_deletable_models' => 'parent_model_id INTEGER, deleted_at DATETIME',
-    'soft_deletable_model_with_belongs' => 'parent_model_id INTEGER, deleted_at DATETIME, soft_deletable_model_with_has_one_id INTEGER',
-    'soft_deletable_model_with_build_belongs' => 'parent_model_id INTEGER, deleted_at DATETIME, soft_deletable_model_with_has_one_and_build_id INTEGER, name VARCHAR(32)',
-    'soft_deletable_model_with_anthor_class_name_belongs' => 'parent_model_id INTEGER, deleted_at DATETIME, soft_deletable_model_with_has_one_id INTEGER',
-    'soft_deletable_model_with_foreign_key_belongs' => 'parent_model_id INTEGER, deleted_at DATETIME, has_one_foreign_key_id INTEGER',
     'soft_deletable_model_with_timestamps' => 'parent_model_id INTEGER, created_at DATETIME, updated_at DATETIME, deleted_at DATETIME',
-    'not_soft_deletable_model_with_belongs' => 'parent_model_id INTEGER, soft_deletable_model_with_has_one_id INTEGER',
-    'not_soft_deletable_model_with_belongs_and_assocation_not_soft_deleted_validator' => 'parent_model_id INTEGER, soft_deletable_model_with_has_one_id INTEGER',
-    'soft_deletable_model_with_has_one_and_builds' => 'parent_model_id INTEGER, color VARCHAR(32), deleted_at DATETIME, has_one_foreign_key_id INTEGER',
+    'not_soft_deletable_model_with_belongs_and_assocation_not_soft_deleted_validators' => 'parent_model_id INTEGER, soft_deletable_model_with_has_one_id INTEGER',
     'featureful_models' => 'deleted_at DATETIME, name VARCHAR(32)',
     'plain_models' => 'deleted_at DATETIME',
     'callback_models' => 'deleted_at DATETIME',
@@ -37,10 +31,7 @@ def setup!
     'jobs' => 'employer_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, deleted_at DATETIME',
     'custom_column_models' => 'destroyed_at DATETIME',
     'custom_sentinel_models' => 'deleted_at DATETIME NOT NULL',
-    'non_soft_deletable_models' => 'parent_model_id INTEGER',
     'polymorphic_models' => 'parent_id INTEGER, parent_type STRING, deleted_at DATETIME',
-    'namespaced_soft_deletable_has_ones' => 'deleted_at DATETIME, soft_deletable_belongs_tos_id INTEGER',
-    'namespaced_soft_deletable_belongs_tos' => 'deleted_at DATETIME, soft_deletable_has_one_id INTEGER',
     'non_soft_deletable_unique_models' => 'name VARCHAR(32), soft_deletable_with_non_soft_deletables_id INTEGER',
     'active_column_models' => 'deleted_at DATETIME, active BOOLEAN',
     'active_column_model_with_uniqueness_validations' => 'name VARCHAR(32), deleted_at DATETIME, active BOOLEAN',
@@ -684,11 +675,6 @@ class FeaturefulModel < ActiveRecord::Base
   validates :name, :presence => true, :uniqueness => true
 end
 
-class NonSoftDeletableChildModel < ActiveRecord::Base
-  validates :name, :presence => true, :uniqueness => true
-end
-
-
 class PlainModel < ActiveRecord::Base
 end
 
@@ -861,66 +847,15 @@ class SoftDeletableModelWithoutObservers < SoftDeletableModel
   self.class.send(remove_method :notify_observers) if method_defined?(:notify_observers)
 end
 
-# refer back to regression test for #118
-class SoftDeletableModelWithHasOne < SoftDeletableModel
-  has_one :soft_deletable_model_with_belong, :dependent => :destroy
-  has_one :class_name_belong, :dependent => :destroy, :class_name => "SoftDeletableModelWithAnthorClassNameBelong"
-  has_one :soft_deletable_model_with_foreign_key_belong, :dependent => :destroy, :foreign_key => "has_one_foreign_key_id"
-  has_one :not_soft_deletable_model_with_belong, :dependent => :destroy
-end
-
-class SoftDeletableModelWithHasOneAndBuild < ActiveRecord::Base
-  has_one :soft_deletable_model_with_build_belong, :dependent => :destroy
-  validates :color, :presence => true
-  after_validation :build_soft_deletable_model_with_build_belong, on: :create
-
-  private
-  def build_soft_deletable_model_with_build_belong
-    super.tap { |child| child.name = "foo" }
-  end
-end
-
-class SoftDeletableModelWithBuildBelong < ActiveRecord::Base
-  acts_as_soft_deletable
-  validates :name, :presence => true
-  belongs_to :soft_deletable_model_with_has_one_and_build
-end
-
-class SoftDeletableModelWithBelong < ActiveRecord::Base
-  acts_as_soft_deletable
-  belongs_to :soft_deletable_model_with_has_one
-end
-
-class SoftDeletableModelWithAnthorClassNameBelong < ActiveRecord::Base
-  acts_as_soft_deletable
-  belongs_to :soft_deletable_model_with_has_one
-end
-
-class SoftDeletableModelWithForeignKeyBelong < ActiveRecord::Base
-  acts_as_soft_deletable
-  belongs_to :soft_deletable_model_with_has_one
-end
-
 class SoftDeletableModelWithTimestamp < ActiveRecord::Base
   belongs_to :parent_model
   acts_as_soft_deletable
 end
 
-class NotSoftDeletableModelWithBelong < ActiveRecord::Base
-  belongs_to :soft_deletable_model_with_has_one
-end
-
-class NotSoftDeletableModelWithBelongsAndAssocationNotSoftDeletedValidator < NotSoftDeletableModelWithBelong
+class NotSoftDeletableModelWithBelongsAndAssocationNotSoftDeletedValidator < ActiveRecord::Base
+    acts_as_soft_deletable
     belongs_to :parent_model
     validates :parent_model, association_not_soft_deleted: true
-end
-
-class FlaggedModel < PlainModel
-  acts_as_soft_deletable :flag_column => :is_deleted
-end
-
-class FlaggedModelWithCustomIndex < PlainModel
-  acts_as_soft_deletable :flag_column => :is_deleted, :indexed_column => :is_deleted
 end
 
 class AsplodeModel < ActiveRecord::Base
@@ -936,20 +871,4 @@ end
 class PolymorphicModel < ActiveRecord::Base
   acts_as_soft_deletable
   belongs_to :parent, polymorphic: true
-end
-
-module Namespaced
-  def self.table_name_prefix
-    "namespaced_"
-  end
-
-  class SoftDeletableHasOne < ActiveRecord::Base
-    acts_as_soft_deletable
-    has_one :soft_deletable_belongs_to, dependent: :destroy
-  end
-
-  class SoftDeletableBelongsTo < ActiveRecord::Base
-    acts_as_soft_deletable
-    belongs_to :soft_deletable_has_one
-  end
 end
