@@ -23,7 +23,7 @@ gem "soft_delete", :github => "optimalworkshop/soft_delete", :branch => "rails4"
 For Rails 4.2 and 5, please use version 4 of Soft Delete:
 
 ``` ruby
-gem "soft_delete", "~> 4.0"  :github => "optimalworkshop/soft_delete"
+gem "soft_delete", :github => "optimalworkshop/soft_delete", :tag => "v4.0.0"
 ```
 
 
