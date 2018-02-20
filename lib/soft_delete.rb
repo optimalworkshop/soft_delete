@@ -24,8 +24,6 @@ module SoftDelete
     end
 
     def only_deleted
-      with_deleted.where.not(deleted_at: nil)
-
       if soft_delete_sentinel_value.nil?
         return with_deleted.where.not(soft_delete_column => soft_delete_sentinel_value)
       end
@@ -69,7 +67,7 @@ module SoftDelete
 
   def soft_delete!
     soft_delete ||
-      raise(ActiveRecord::RecordNotDestroyed.new("Failed to destroy the record", self))
+      raise(ActiveRecord::RecordNotDestroyed.new("Failed to soft delete the record", self))
   end
 
   def restore!(opts = {})
