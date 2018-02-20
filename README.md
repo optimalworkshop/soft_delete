@@ -98,7 +98,6 @@ class Client < ActiveRecord::Base
 end
 ```
 
-
 If you want to access soft-deleted associations, override the getter method:
 
 ``` ruby
@@ -106,8 +105,6 @@ def product
   Product.unscoped { super }
 end
 ```
-
-
 
 If you want to include associated soft-deleted objects in Rails 4+, you can (un)scope the association:
 
