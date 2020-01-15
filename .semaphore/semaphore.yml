@@ -11,3 +11,6 @@ blocks:
         - name: 'Job #1'
           commands:
             - checkout
+            - gem install bundler
+            - bundle install --path vendor/bundle
+            - bundle exec rake test
